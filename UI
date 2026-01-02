@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>UI</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .topnav {
+            background-color: rgb(255, 255, 119);
+            overflow: hidden;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            border: black solid 1px;
+        }
+        .topnav a {
+            float: left;
+            color: black;
+            text-align: center;
+            padding: 14px 20px;
+            text-decoration: none;
+            font-size: 17px;
+        }
+        .topnav a:hover {
+            background-color: #ffff99;
+            color: black;
+        }
+        .topnav .brand {
+            float: left;
+            color: black;
+            text-align: center;
+            padding: 14px 20px;
+            font-size: 17px;
+            font-weight: bold;
+            pointer-events: none;
+        }
+        .topnav .login {
+            float: right;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="topnav">
+        <div class="brand">CCIT4078A</div>
+        <a href="login.html" class="login">Login</a>
+    </div>
+    
+
+</body>
+</html>
