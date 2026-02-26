@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>註冊 - CCIT4078A</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .topnav {
+            background-color: rgb(255, 255, 119);
+            overflow: hidden;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            border: black solid 1px;
+        }
+        .topnav a {
+            float: left;
+            color: black;
+            text-align: center;
+            padding: 14px 20px;
+            text-decoration: none;
+            font-size: 17px;
+        }
+        .topnav a:hover {
+            background-color: #ffff99;
+            color: black;
+        }
+        .topnav .brand {
+            float: left;
+            color: black;
+            text-align: center;
+            padding: 14px 20px;
+            font-size: 17px;
+            font-weight: bold;
+            pointer-events: none;
+        }
+        .topnav .login {
+            float: right;
+        }
+        .login-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 100px 20px 20px;
+        }
+        .login-box {
+            background-color: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .login-box h2 {
+            margin-bottom: 30px;
+            color: black;
+        }
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .login-btn {
+            background-color: rgb(255, 255, 119);
+            color: black;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .login-btn:hover {
+            background-color: #ffff99;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="topnav">
+        <div class="brand">CCIT4078A</div>
+        <a href="login.html" class="login">登入</a>
+    </div>
+
+    <div class="login-container">
+        <div class="login-box">
+            <h2>註冊新帳號</h2>
+            
+            <div class="form-group">
+                <label for="username">使用者名稱</label>
+                <input type="text" id="username" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">密碼</label>
+                <input type="password" id="password" required>
+            </div>
+
+            <button class="login-btn" onclick="register()">註冊</button>
+
+            <div id="message" class="message"></div>
+
+            <div class="back-link">
+                已經有帳號？ <a href="login.html">返回登入</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let db = null;
+
+        async function initDb() {
+            if (db) return;
+            const SQL = await initSqlJs({
+                locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/${file}`
+            });
+            db = new SQL.Database();
+
+            db.run(`
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT UNIQUE NOT NULL,
+                    password TEXT NOT NULL,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+                );
+            `);
+        }
+
+        async function simpleHash(str) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(str);
+            const hash = await crypto.subtle.digest('SHA-256', data);
+            return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        async function register() {
+            await initDb();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (!username || !password) {
+                showMessage("請輸入帳號和密碼", "error");
+                return;
+            }
+
+            if (password.length < 6) {
+                showMessage("密碼至少需要 6 個字元", "error");
+                return;
+            }
+
+            try {
+                const hashed = await simpleHash(password);
+                db.run("INSERT INTO users (username, password) VALUES (?, ?)", [username, hashed]);
+                showMessage(`註冊成功！ ${username} 已建立帳號`, "success");
+                
+                // 註冊成功後 1.5 秒跳回登入頁面
+                setTimeout(() => {
+                    window.location.href = "login.html";
+                }, 1500);
+            } catch (e) {
+                showMessage("註冊失敗：此使用者名稱已被使用", "error");
+            }
+        }
+
+        function showMessage(text, type) {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.className = "message " + type;
+        }
+
+        initDb();
+    </script>
+
+</body>
+</html>
