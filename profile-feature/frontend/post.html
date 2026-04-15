@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CCIT4078A - Community Feed</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+        .topnav {
+            background-color: rgb(255, 255, 119);
+            overflow: hidden;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            border-bottom: black solid 1px;
+        }
+        .topnav a {
+            float: left;
+            color: black;
+            text-align: center;
+            padding: 14px 20px;
+            text-decoration: none;
+            font-size: 17px;
+        }
+        .topnav a:hover {
+            background-color: #ffff99;
+            color: black;
+        }
+        .topnav .brand {
+            float: left;
+            color: black;
+            text-align: center;
+            padding: 14px 20px;
+            font-size: 17px;
+            font-weight: bold;
+            pointer-events: none;
+        }
+        .topnav .login {
+            float: right;
+        }
+
+        /* Main content - push down because of fixed nav */
+        .container {
+            max-width: 600px;
+            margin: 80px auto 40px auto;
+            padding: 0 15px;
+        }
+
+        /* Post creation area */
+        .create-post {
+            background: white;
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .create-post textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            resize: vertical;
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+        .create-post button {
+            background: rgb(80, 150, 255);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .create-post button:hover {
+            background: rgb(60, 130, 240);
+        }
+
+        /* Feed / Posts */
+        .feed {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .post {
+            background: white;
+            border-radius: 10px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .post .username {
+            font-weight: bold;
+            margin-bottom: 6px;
+            color: #1877f2;
+        }
+        .post .content {
+            white-space: pre-wrap;
+            margin-bottom: 8px;
+        }
+        .post .time {
+            font-size: 0.85em;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="topnav">
+        <div class="brand">CCIT4078A</div>
+        <a href="login.html" class="login">Login</a>
+    </div>
+
+    <div class="container">
+
+        <!-- Post creation area -->
+        <div class="create-post">
+            <textarea id="postContent" placeholder="What's on your mind?"></textarea>
+            <button onclick="createPost()">Post</button>
+        </div>
+
+        <!-- Feed area where posts appear -->
+        <div class="feed" id="feed"></div>
+
+    </div>
+
+    <script>
+        // Load existing posts when page opens
+        window.onload = loadPosts;
+
+        function createPost() {
+            const textarea = document.getElementById('postContent');
+            const content = textarea.value.trim();
+
+            if (!content) {
+                alert("Please write something before posting!");
+                return;
+            }
+
+            // Create post object
+            const post = {
+                content: content,
+                time: new Date().toLocaleString(),
+                // You can later add username here after login system
+                username: "You"   // ← placeholder (change later)
+            };
+
+            // Get current posts from localStorage or start empty
+            let posts = JSON.parse(localStorage.getItem('communityPosts')) || [];
+            posts.unshift(post); // add new post at the beginning
+
+            // Save back to localStorage
+            localStorage.setItem('communityPosts', JSON.stringify(posts));
+
+            // Clear textarea
+            textarea.value = '';
+
+            // Refresh feed
+            loadPosts();
+        }
+
+        function loadPosts() {
+            const feed = document.getElementById('feed');
+            feed.innerHTML = ''; // clear old content
+
+            let posts = JSON.parse(localStorage.getItem('communityPosts')) || [];
+
+            if (posts.length === 0) {
+                feed.innerHTML = '<p style="text-align:center;color:#777;">No posts yet. Be the first!</p>';
+                return;
+            }
+
+            posts.forEach(post => {
+                const postDiv = document.createElement('div');
+                postDiv.className = 'post';
+
+                postDiv.innerHTML = `
+                    <div class="username">${post.username}</div>
+                    <div class="content">${post.content}</div>
+                    <div class="time">${post.time}</div>
+                `;
+
+                feed.appendChild(postDiv);
+            });
+        }
+    </script>
+
+</body>
+</html>

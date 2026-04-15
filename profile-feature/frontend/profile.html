@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Profile - CCIT4078A</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            min-height: 100vh;
+        }
+
+        .topnav {
+            background-color: rgb(255, 255, 119);
+            overflow: hidden;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            border: black solid 1px;
+        }
+
+        .topnav a, .topnav button {
+            float: left;
+            color: black;
+            text-align: center;
+            padding: 14px 20px;
+            text-decoration: none;
+            font-size: 17px;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .topnav a:hover, .topnav button:hover {
+            background-color: #ffff99;
+            color: black;
+        }
+
+        .topnav .brand {
+            float: left;
+            color: black;
+            text-align: center;
+            padding: 14px 20px;
+            font-size: 17px;
+            font-weight: bold;
+            pointer-events: none;
+        }
+
+        .topnav .right {
+            float: right;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 100px auto 20px;
+            padding: 0 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: calc(100vh - 100px);
+        }
+
+        .section {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            border-bottom: 2px solid rgb(255, 255, 119);
+            padding-bottom: 10px;
+        }
+
+
+        .profile-field {
+            margin-bottom: 20px;
+        }
+
+        .profile-field label {
+            display: block;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 5px;
+        }
+
+        .profile-field .value {
+            padding: 12px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            color: #333;
+        }
+
+        .profile-field input, .profile-field textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: Arial, sans-serif;
+        }
+
+        .profile-field textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .profile-field input:disabled, .profile-field textarea:disabled {
+            background-color: #f0f0f0;
+            color: #999;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        .btn {
+            background-color: rgb(255, 255, 119);
+            color: black;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .btn:hover {
+            background-color: #ffff99;
+        }
+
+        .btn-secondary {
+            background-color: #ccc;
+        }
+
+        .btn-secondary:hover {
+            background-color: #bbb;
+        }
+
+        .message {
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .message.success {
+            display: block;
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .message.error {
+            display: block;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .message.info {
+            display: block;
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+
+        .role-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background-color: rgb(255, 255, 119);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .edit-mode .profile-field input,
+        .edit-mode .profile-field textarea {
+            background-color: white;
+        }
+
+        .not-logged-in {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .not-logged-in p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="topnav">
+        <div class="brand">CCIT4078A</div>
+        <a href="post.html">Feed</a>
+        <a href="profile.html">Profile</a>
+        <button class="right" id="logoutBtn" onclick="logout()" style="display:none;">Logout</button>
+        <a href="login.html?returnTo=profile.html" class="right" id="loginLink">Login</a>
+    </div>
+
+    <div class="container">
+        <!-- My Profile Section -->
+        <div class="section">
+            <h2>My Profile</h2>
+            <div id="myProfileContent"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let viewingProfile = null;
+
+        // Initialize page
+        async function init() {
+            const user = localStorage.getItem('currentUser');
+            if (user) {
+                currentUser = JSON.parse(user);
+                document.getElementById('loginLink').style.display = 'none';
+                document.getElementById('logoutBtn').style.display = 'block';
+                loadMyProfile();
+            } else {
+                //showNotLoggedIn();
+            }
+        }
+
+        function showNotLoggedIn() {
+            document.getElementById('myProfileContent').innerHTML = `
+                <div class="not-logged-in">
+                    <p>You are not logged in. Please <a href="login.html?returnTo=profile.html">login</a> to view your profile.</p>
+                </div>
+            `;
+        }
+
+        function logout() {
+            localStorage.removeItem('currentUser');
+            location.href = 'login.html';
+        }
+
+        async function loadMyProfile() {
+            const response = await fetch(`http://localhost:3000/profile/${currentUser.student_number}`);
+            const result = await response.json();
+
+            if (result.success) {
+                const profile = result.profile;
+                document.getElementById('myProfileContent').innerHTML = `
+                    <div id="messageContainer"></div>
+                    <div id="profileForm"></div>
+                    <div class="button-group">
+                        <button class="btn" id="editBtn" onclick="enterEditMode()">Edit Profile</button>
+                        <button class="btn btn-secondary" id="cancelBtn" onclick="cancelEdit()" style="display:none;">Cancel</button>
+                        <button class="btn" id="saveBtn" onclick="saveProfile()" style="display:none;">Save Changes</button>
+                    </div>
+                `;
+
+                displayProfile(profile, 'profileForm');
+            }
+        }
+
+        function displayProfile(profile, containerId) {
+            const container = document.getElementById(containerId);
+            
+            container.innerHTML = `
+                <div class="profile-field">
+                    <label>Student Number</label>
+                    <div class="value">${profile.student_number}</div>
+                </div>
+
+                <div class="profile-field">
+                    <label for="fullname">Full Name</label>
+                    <input type="text" id="fullname" value="${profile.fullname || ''}" disabled>
+                </div>
+
+                <div class="profile-field">
+                    <label for="course">Course</label>
+                    <input type="text" id="course" value="${profile.course || ''}" disabled>
+                </div>
+
+                <div class="profile-field">
+                    <label>Role</label>
+                    <div class="value">
+                        <span class="role-badge">${profile.role || 'student'}</span>
+                    </div>
+                </div>
+
+                <div class="profile-field">
+                    <label for="bio">Bio</label>
+                    <textarea id="bio" disabled>${profile.bio || ''}</textarea>
+                </div>
+            `;
+        }
+
+        function enterEditMode() {
+            document.getElementById('editBtn').style.display = 'none';
+            document.getElementById('cancelBtn').style.display = 'block';
+            document.getElementById('saveBtn').style.display = 'block';
+
+            // Enable editing
+            document.getElementById('fullname').disabled = false;
+            document.getElementById('course').disabled = false;
+            document.getElementById('bio').disabled = false;
+
+            document.getElementById('profileForm').classList.add('edit-mode');
+        }
+
+        function cancelEdit() {
+            document.getElementById('editBtn').style.display = 'block';
+            document.getElementById('cancelBtn').style.display = 'none';
+            document.getElementById('saveBtn').style.display = 'none';
+
+            loadMyProfile();
+        }
+
+        async function saveProfile() {
+            const fullname = document.getElementById('fullname').value.trim();
+            const course = document.getElementById('course').value.trim();
+            const bio = document.getElementById('bio').value.trim();
+
+            if (!fullname || !course) {
+                showMessage('messageContainer', 'Full Name and Course are required', 'error');
+                return;
+            }
+
+            const response = await fetch(`http://localhost:3000/profile/${currentUser.student_number}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fullname, course, bio })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showMessage('messageContainer', 'Profile updated successfully!', 'success');
+                // Update localStorage with new profile
+                currentUser.fullname = fullname;
+                currentUser.course = course;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                
+                setTimeout(() => {
+                    loadMyProfile();
+                }, 1000);
+            } else {
+                showMessage('messageContainer', 'Error updating profile', 'error');
+            }
+        }
+
+        function showMessage(containerId, message, type) {
+            const container = document.getElementById(containerId);
+            if (container) {
+                container.innerHTML = `<div class="message ${type}">${message}</div>`;
+                setTimeout(() => {
+                    container.innerHTML = '';
+                }, 3000);
+            }
+        }
+
+        // Initialize when page loads
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>    
